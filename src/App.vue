@@ -1,28 +1,80 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <Map v-on:initMap="setMap" />
+    <Locations />
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import Map from "./components/Map.vue";
+import Locations from "./components/Locations";
+import { mapMutations } from "vuex";
+import Settings from './Settings';
 
 export default {
-  name: 'app',
+  name: "app",
+  data() {
+    return {
+      map: this.$store.getters.map
+    };
+  },
+  mounted() {
+    Settings.initialize();
+  },
+  methods: {
+    setMap(newMap) {
+      this.setMapState(newMap);
+    },
+    ...mapMutations({
+      setMapState: 'setMap',
+    }),
+  },
   components: {
-    HelloWorld
+    Map,
+    Locations
   }
-}
+};
 </script>
 
 <style>
+h3 {
+  margin: 40px 0 0;
+}
+ul {
+  list-style-type: none;
+  padding: 0;
+}
+li {
+  display: inline-block;
+  margin: 0 10px;
+}
+a {
+  color: #42b983;
+}
 #app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
+  display: flex;
   color: #2c3e50;
-  margin-top: 60px;
+}
+#mapid {
+  height: 500px;
+  width: 60%;
+  display: inline-block;
+  margin: 0 0 0 auto;
+}
+@media screen and (max-width: 850px){
+  #app {
+    flex-direction: column;
+    margin-top: 0;
+  }
+  #mapid {
+    width: 100%;
+  }
+  #side-bar-wrapper {
+    width: 100%;
+    margin: 10px 0 0;
+  }
+  #location-list {
+    width: 110%;
+  }
 }
 </style>
