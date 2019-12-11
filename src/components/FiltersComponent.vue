@@ -1,28 +1,39 @@
 <template>
   <div id="location-filters">
     <div id="location-current-location">
-      <input type="text" id="location-search-input" v-on:input="updateCurrentLocation" placeholder="Current Location"/>
-    </div>
-    <div id="location-search-filter">
-      <input type="text" id="location-search-input" v-on:input="compileActiveFilters" placeholder="Search for location" v-model="searchInput"/>
+      <input
+        type="search"
+        id="location-search-input"
+        placeholder="Current Location"
+        v-on:input="createNewUserLocation"
+        :value="userAddress"
+      />
     </div>
     <div id="location-filter-bar">
-      <span id="filter-order" name="isOrdered" class="filter" v-on:click="toggleFilter">Order</span>
+      <div id="filter-max-distance-wrapper">
+        <span>Max:</span>
+        <input id="filter-max-distance" v-on:input="compileActiveFilters" v-model="maxDistance" />
+        <span>{{ unitsAbr }}</span>
+      </div>
       <span id="filter-clear" class="filter" v-on:click="clearFilters">Clear Filters</span>
     </div>
   </div>
 </template>
 
 <script>
+import settings from '../Settings';
 import { mapGetters, mapActions, mapMutations } from "vuex";
+import L from "leaflet";
 
 export default {
   name: "FiltersComponent",
   data() {
     return {
       isOrdered: false,
-      searchInput: undefined,
-      filters: []
+      searchTimeout: undefined,
+      maxDistance: this.$store.state.radiusDistance,
+      filters: [],
+      isLoading: false
     };
   },
   methods: {
@@ -40,24 +51,58 @@ export default {
 
       this.compileActiveFilters();
     },
-    updateCurrentLocation(e) {
-      let location = e.target.value;
+    createNewUserLocation(e) {
+      let self = this,
+        address = e.target.value,
+        newUserLocation = {},
+        newLatLng = { lat: null, lng: null };
 
-      this.setUserLocation(location);
+      if (this.searchTimeout) clearTimeout(this.searchTimeout);
+
+      if (address) {
+        this.isLoading = true;
+        this.searchTimeout = setTimeout(function() {
+          self.getLocationFromAddress(address).then(function(location) {
+            if (location && location.features[0]) {
+              newLatLng.lat = location.features[0].center[1];
+              newLatLng.lng = location.features[0].center[0];
+              newUserLocation.latLng = newLatLng;
+              newUserLocation.address = address;
+
+              if(self.userLocation.marker) self.map.removeLayer(self.userLocation.marker); ///remove current marker if applicable
+              newUserLocation.marker = L.circle(newUserLocation.latLng, { radius: 200 });
+              newUserLocation.marker.addTo(self.map);
+              self.map.setView(newUserLocation.latLng, 10);
+
+              self.setUserLocation(newUserLocation);
+            }
+            self.isLoading = false;
+          });
+        }, 1500);
+      }
     },
-    search(locations) {
+    getKeywordLocations(locations) {
       let input = this.searchInput.toLowerCase();
-      
-      return locations.filter(function(location) {
-          let locationAddress =
-            location.LocationAddress1.toLowerCase() +
-            ", " +
-            location.LocationCity.toLowerCase() +
-            ", " +
-            location.LocationState.toLowerCase();
 
-          return locationAddress.includes(input);
-        });
+      return locations.filter(function(location) {
+        let locationAddress =
+          location.LocationAddress1.toLowerCase() +
+          ", " +
+          location.LocationCity.toLowerCase() +
+          ", " +
+          location.LocationState.toLowerCase();
+
+        return locationAddress.includes(input);
+      });
+    },
+    async getLocationsWithNewDistance() {
+      let newLocations = null;
+
+      this.setRadiusDistance(this.maxDistance);
+
+      newLocations = await this.getNearbyLocations();
+
+      return newLocations;
     },
     getOrderedLocations(locations) {
       let orderedLocations = [];
@@ -70,57 +115,47 @@ export default {
         a.LocationCity > b.LocationCity ? 1 : -1
       );
     },
-    getNearbyLocations(locations) {
-      var self = this,
-        nearbyLocations = [];
-
-      return new Promise(function(resolve) {
-        locations.forEach(async function(location) {
-          if (location) {
-            let distanceAway = await self.getDistanceAwayFromUser(location);
-
-            if (parseInt(distanceAway) < 1500) nearbyLocations.push(location);
-          }
-        });
-
-        resolve(nearbyLocations);
-      });
-    },
     async compileActiveFilters() {
       let filteredLocations = this.locations;
-
-      if(this.searchInput) filteredLocations = this.search(filteredLocations);
-      if(this.isOrdered) filteredLocations = this.getOrderedLocations(filteredLocations);
-      if(this.isNearby) filteredLocations = await this.getNearbyLocations(filteredLocations);
+      
+      if (this.maxDistance) 
+        filteredLocations = this.getLocationsWithNewDistance();
 
       this.$emit("filterLocation", filteredLocations);
     },
     clearFilters() {
-      let orderElement = document.getElementById("filter-order"),
-        radiusElement = document.getElementById("filter-radius");
+      let maxDistance = document.getElementById("filter-max-distance");
 
-      this.isOrdered = false;
-      orderElement.classList.remove("active-filter");
-      this.isNearby = false;
-      radiusElement.classList.remove("active-filter");
+      maxDistance.value = this.$store.state.radiusDistance;
       this.searchInput = "";
 
       this.$emit("filterLocation", this.locations);
     },
     ...mapActions({
-      getDistanceAwayFromUser: "getDistanceAwayFromUser"
+      getLocationFromAddress: "getLocationFromAddress",
+      getNearbyLocations: "getNearbyLocations"
     }),
     ...mapMutations({
-      setUserLocation: "setUserLocation"
+      setUserLocation: "setUserLocation",
+      setRadiusDistance: "setRadiusDistance"
     })
   },
   computed: {
     ...mapGetters({
-      activeLocations: "activeLocations",
       locations: "locations",
+      map: "map",
       userLocation: "userLocation",
-      map: "map"
-    })
+    }),
+    userAddress(){
+      return this.userLocation.address;
+    },
+    unitsAbr() {
+      if(settings.units == "miles"){
+        return "mi."
+      } else {
+        return "km."
+      }
+    }
   }
 };
 </script>
@@ -128,21 +163,50 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style lang="scss">
 #location-filters {
-  width: 97%;
-  margin: 0 auto;
+  width: 90%;
+  margin: 0 auto 3px;
 }
 #location-filter-bar {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-}
-#location-search-filter {
-  margin-bottom: 5px;
+  margin: 5px auto 0;
 }
 #location-search-input {
-  width: 99%;
+  width: 100%;
   margin: 0 auto;
-  padding: 0 1%;
+  padding: 0 2%;
+  border-right: none;
+  border-left: none;
+  border-top: none;
+  border-bottom: 1px solid lightgray;
+}
+#location-current-location{
+  span {
+    position: relative;
+    float: right;
+    right: 18px;
+    width: 9px;
+    height: 36px;
+    cursor: pointer;
+    bottom: 27px;
+  }
+}
+#filter-max-distance-wrapper {
+  display: inline-block;
+  width: auto;
+  max-width: 37%;
+}
+#filter-max-distance {
+  width: 31%;
+  height: 13px;
+  vertical-align: text-top;
+  margin: 0 5px;
+  border-right: none;
+  border-left: none;
+  border-top: none;
+  text-align: center;
+  border-bottom: 1px solid lightgray;
 }
 .filter {
   margin: 0 5px;
@@ -164,7 +228,7 @@ export default {
   color: #ec432c;
 
   &:hover {
-    border-bottom: 1px solid #ec432c;
+    border-bottom: 1px solid rgba(0,0,0,0);
   }
 }
 </style>

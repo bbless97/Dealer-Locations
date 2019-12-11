@@ -8,7 +8,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <link rel="icon" href="<%= BASE_URL %>favicon.ico">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.2.0/dist/leaflet.css">
-  <link rel="stylesheet" href="https://static.ridestyler.net/rs-ui/latest/rsui.min.css">
+  <!-- <link rel="stylesheet" href="https://static.ridestyler.net/rs-ui/latest/rsui.min.css"> -->
   <script src="http://api-alpha.ridestyler.net/js?Key=c028c54cf0c447c594a862de6ac85d1a"></script>
   <% for (var style in htmlWebpackPlugin.files.css) { %>
     <link rel="stylesheet" type="text/css" href="<%= htmlWebpackPlugin.files.css[style]%>" />
@@ -26,7 +26,7 @@
   <% } %>
   <script>
     document.addEventListener('DOMContentLoaded', (event) => {
-      var locationService = RideStylerLocation.create('#app', {units: 'miles'});
+      var locationService = RideStylerLocation.create('#app', {units: 'miles', radiusDistance: 80});
     });
   </script>
 </body>

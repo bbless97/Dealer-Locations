@@ -1,3 +1,5 @@
+import store from './store/index';
+
 function detectRideStylerEnvironment() {
     const url = window.ridestyler.ajax.url('', undefined);
 
@@ -11,41 +13,27 @@ function detectRideStylerEnvironment() {
  * @typedef {'live'|'beta'|'alpha'|'other'} RideStylerAPIEnvironment
  */
 
-/** 
- * Callbacks to be run when the settings is done initializing
- * @type {(()=>void)[]}
- */
-const settingsInitializedCallbacks = [];
-let isInitialized = false;
 
 const settings = {
     async initialize() {
         detectRideStylerEnvironment();
         
-        isInitialized = true;
-        settingsInitializedCallbacks.forEach(cb => cb());
-        settingsInitializedCallbacks.splice(0, settingsInitializedCallbacks.length);
-    },
-
-    /**
-     * @param {()=>void} callback Callback to be ran after the settings are initialized
-     */
-    onInitialized(callback) {
-        if (isInitialized) {
-            callback();
-            return;
+        for(let setting in this.options){
+            if(store.state[setting] != null){
+                store.state[setting] = this.options[setting];
+            }
         }
-
-        settingsInitializedCallbacks.push(callback);
     },
-
+    
     /** @type {import('./main').RideStylerLocationOptions} */
     options: {},
 
     /** @type {RideStylerAPIEnvironment} */
     rideStylerEnvironment: undefined,
     
-    units: "miles"
+    units: "miles",
+
+    radiusDistance: null,
 };
 
 export default settings;

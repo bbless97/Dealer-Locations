@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <Map v-on:initMap="setMap" />
-    <Locations />
+    <Locations v-if="map" />
   </div>
 </template>
 
@@ -9,13 +9,13 @@
 import Map from "./components/Map.vue";
 import Locations from "./components/Locations";
 import { mapMutations } from "vuex";
-import Settings from './Settings';
+import Settings from "./Settings";
 
 export default {
   name: "app",
   data() {
     return {
-      map: this.$store.getters.map
+      map: null
     };
   },
   mounted() {
@@ -23,11 +23,14 @@ export default {
   },
   methods: {
     setMap(newMap) {
-      this.setMapState(newMap);
+      if (newMap) {
+        this.setMapState(newMap);
+        this.map = newMap;
+      }
     },
     ...mapMutations({
-      setMapState: 'setMap',
-    }),
+      setMapState: "setMap"
+    })
   },
   components: {
     Map,
@@ -51,6 +54,16 @@ li {
 a {
   color: #42b983;
 }
+.loader::after {
+  content: url('https://static.ridestyler.net/images/loaders/loader_radial_chaser_back_on_white_32.gif');
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: inherit;
+  width: 100%;
+  top: 0;
+}
 #app {
   display: flex;
   color: #2c3e50;
@@ -61,7 +74,7 @@ a {
   display: inline-block;
   margin: 0 0 0 auto;
 }
-@media screen and (max-width: 850px){
+@media screen and (max-width: 850px) {
   #app {
     flex-direction: column;
     margin-top: 0;

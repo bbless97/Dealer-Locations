@@ -1,8 +1,9 @@
 <template>
   <li class="location" v-on:click="onClick">
     <a>{{ location.LocationCity }}</a>
-    <p>Address: {{ location.LocationAddress1 }}, {{ location.LocationCity }}, {{ location.LocationState }}</p>
+    <p>{{ location.LocationAddress1 }}, {{ location.LocationCity }}, {{ location.LocationState }}</p>
     <p>Phone: {{ location.LocationSalesPhone }}</p>
+    <p>Distance Away: {{ location.DistanceFromUser }}</p>
   </li>
 </template>
 
@@ -17,7 +18,7 @@ export default {
   methods: {
     onClick() {
       this.$emit("clickEvent", this.location);
-    }
+    },
   },
   props: {
     location: Object
@@ -54,7 +55,7 @@ export default {
       height: 2px;
       display: block;
       right: 0;
-      background: #ec432c;;
+      background: #ec432c;
       transition: width .3s ease;
       -webkit-transition: width .3s ease;
     }

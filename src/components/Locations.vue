@@ -1,12 +1,12 @@
 <template>
   <div id="side-bar-wrapper">
-    <FiltersComponent v-on:filterLocation="updateLocations" />
-    <ul id="location-list">
+    <FiltersComponent v-on:filterLocation="updateLocations"/>
+    <ul id="location-list" v-bind:class="{ loader: isLoading }">
       <LocationComponent
         v-for="locationObject in activeLocations"
         v-bind:key="locationObject.LocationID"
         v-bind:location="locationObject"
-        v-on:clickEvent="focusMarker"
+        v-on:clickEvent="focusLocation"
       />
       <div id="no-results" v-if="activeLocations.length == 0">No Results</div>
     </ul>
@@ -17,77 +17,42 @@
 import LocationComponent from "../components/LocationComponent.vue";
 import FiltersComponent from "../components/FiltersComponent.vue";
 import { mapMutations, mapActions, mapGetters } from "vuex";
-import L from "leaflet";
 
 export default {
   name: "Locations",
+  data: function() {
+    return {
+      isLoading: false
+    }
+  },
   mounted() {
     var self = this;
 
-    this.getLocations().then(function(locations) {
-      self.locateUser().then(function(){
-        self.setLocations(locations);
-        self.setActiveLocations(locations);
-        self.setupLocationMarkers(locations);
-      });
-    });
+    this.locateUser()
+      .then(function() {
+        self.updateMap();
+      })
+      .catch(function() {});
   },
   methods: {
-    setupLocationMarkers(locations) {
-      let self = this;
-
-      locations.forEach(async function(location) {
-        let popupContent = null,
-        latLong = [location.LocationLatitude, location.LocationLongitude];
-        
-        if (latLong){
-          popupContent = await self.buildPopup(location, latLong)
-
-          L.marker(latLong)
-            .addTo(self.map)
-            .bindPopup(popupContent);
-        }
-      });
-    },
-    async buildPopup(location) {
-      let popupContent = document.createElement("div"),
-        popupLocation = document.createElement("p"),
-        popupDistanceFromUser = document.createElement("p"),
-        locationString = await this.getLocationString(location);
-
-      popupLocation.classList.add("pop-location");
-      popupDistanceFromUser.classList.add("pop-distance");
-
-      popupLocation.innerHTML = locationString;
-      popupDistanceFromUser.innerHTML = await this.getDistanceAwayFromUser(location) + " miles away";
-
-      popupContent.append(popupLocation);
-      popupContent.append(popupDistanceFromUser);
-
-      return popupContent;
-    },
-    async focusMarker(location) {
-      let latLong = await this.getLatLong(location);
-
-      if (latLong) this.map.setView(latLong, 13);
-    },
-    updateLocations(locations) {
-      this.setActiveLocations(locations);
+    async updateLocations(locations) {
+      this.isLoading = true;
+      await this.setActiveLocations(locations);
+      this.isLoading = false;
 
       if (this.activeLocations.length == 1) {
-        this.focusMarker(this.activeLocations[0]);
+        this.focusLocation(this.activeLocations[0]);
       }
     },
     ...mapMutations({
-      setActiveLocations: "setActiveLocations",
-      setLocations: "setLocations"
+      setActiveLocations: "setActiveLocations"
     }),
     ...mapActions({
-      getLocations: "getLocations",
-      getLocationString: "getLocationString",
-      getDistanceAwayFromUser: "getDistanceAwayFromUser",
-      getLatLong: "getLatLong",
-      locateUser: "getUserLocation"
+      locateUser: "getUserLocation",
+      focusLocation: "focusLocation",
+      getNearbyLocations: "getNearbyLocations",
+      setupLocationMarkers: "setupLocationMarkers",
+      clearMapMarkers: "clearMapMarkers"
     })
   },
   computed: {
@@ -95,8 +60,16 @@ export default {
       activeLocations: "activeLocations",
       locations: "locations",
       userLocation: "userLocation",
-      map: "map"
     })
+  },
+  watch: {
+    userLocation(){
+      this.getNearbyLocations();
+    },
+    locations(newLocations){
+      this.clearMapMarkers();
+      this.setupLocationMarkers(newLocations);
+    }
   },
   components: {
     LocationComponent,
@@ -120,6 +93,11 @@ export default {
   height: 442px;
   width: 418px;
   margin: 0;
+  border-top: 1px solid lightgray;
+
+  :last-child {
+    border-bottom: none;
+  }
 }
 #no-results {
   padding: 10px 20px 0;

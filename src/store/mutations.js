@@ -20,10 +20,13 @@ const mutations = {
         state.activeLocations = newLocations;
     },
     setUserLocation(state, newLocation) {
-        state.userLocation = newLocation
+        state.userLocation = newLocation;
     },
     setLocations(state, newLocations) {
         state.locations = newLocations;
+    },
+    setRadiusDistance(state, newDistance){
+        state.radiusDistance = newDistance;
     }
 }
 
