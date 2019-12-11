@@ -69,10 +69,12 @@ a {
   color: #2c3e50;
 }
 #mapid {
-  height: 500px;
-  width: 60%;
+  height: 100%;
+  width: 100%;
   display: inline-block;
   margin: 0 0 0 auto;
+  z-index: 0;
+  border-radius: 5px;
 }
 @media screen and (max-width: 850px) {
   #app {
