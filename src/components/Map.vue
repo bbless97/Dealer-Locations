@@ -96,8 +96,8 @@ export default {
     a {
       color: #ec432c;
     }
-    .leaflet-popup-close-button {
-      color: black
+    .leaflet-control-zoom a, .leaflet-control-attribution a, .leaflet-popup-close-button {
+      color: black;
     }
   }
 </style>
