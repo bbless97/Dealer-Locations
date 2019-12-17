@@ -85,6 +85,7 @@ export default {
       margin-bottom: 5px;
       border-bottom: 2px solid #ec432c;
       padding-bottom: 5px;
+      text-transform: uppercase;
     }
     .leaflet-popup-content p:nth-child(1n + 2) { 
       color: gray;
