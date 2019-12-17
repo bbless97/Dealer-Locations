@@ -1,6 +1,6 @@
 <template>
   <div id="map-wrapper">
-    <input id="search-location" placeholder="Enter Location" v-on:input="searchLocation($event)" />
+    <input id="search-location" placeholder="Enter Location" v-on:input="searchLocation($event)" type="search"/>
     <div id="mapid"></div>
   </div>
 </template>
@@ -39,10 +39,10 @@ export default {
       this.tileLayer.addTo(this.map);
     },
     searchLocation(input) {
-      let keyword = input.target.value; 
+      let keyword = input.target.value.toLowerCase(); 
 
       for(let location in this.locations){
-        let address = this.locations[location].LocationAddress1 + ", " + this.locations[location].LocationCity + ", " + this.locations[location].LocationState;
+        let address = (this.locations[location].LocationAddress1 + ", " + this.locations[location].LocationCity + ", " + this.locations[location].LocationState).toLowerCase();
 
         if(address.indexOf(keyword) != -1){
           this.focusLocation(this.locations[location]);
@@ -67,7 +67,7 @@ export default {
     position: absolute;
     z-index: 1;
     width: 250px;
-    height: 25px;
+    height: 30px;
     top: 10px;
     right: 10px;
     padding-left: 10px;
@@ -79,5 +79,24 @@ export default {
     width: 60%;
     height: 500px;
     position: relative;
+
+    .pop-location-name {
+      font-weight: bold;
+      margin-bottom: 5px;
+      border-bottom: 2px solid #ec432c;
+      padding-bottom: 5px;
+    }
+    .leaflet-popup-content p:nth-child(1n + 2) { 
+      color: gray;
+    }
+    .leaflet-container a.leaflet-popup-close-button {
+      padding: 10px 10px 0 0;
+    }
+    a {
+      color: #ec432c;
+    }
+    .leaflet-popup-close-button {
+      color: black
+    }
   }
 </style>

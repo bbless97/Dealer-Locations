@@ -4,8 +4,8 @@
       <input
         type="search"
         id="location-search-input"
-        placeholder="Current Location"
         v-on:input="createNewUserLocation"
+        :placeholder="userAddress || 'Enter Your Location'"
         :value="userAddress"
       />
     </div>
@@ -15,7 +15,9 @@
         <input id="filter-max-distance" v-on:input="compileActiveFilters" v-model="maxDistance" />
         <span>{{ unitsAbr }}</span>
       </div>
-      <span id="filter-clear" class="filter" v-on:click="clearFilters">Clear Filters</span>
+      <div id="locate-user">
+        <i class="icon icon-street-view" v-on:click="getUserLocation" alt="Get Your Current Location"></i>
+      </div>
     </div>
   </div>
 </template>
@@ -123,17 +125,10 @@ export default {
 
       this.$emit("filterLocation", filteredLocations);
     },
-    clearFilters() {
-      let maxDistance = document.getElementById("filter-max-distance");
-
-      maxDistance.value = this.$store.state.radiusDistance;
-      this.searchInput = "";
-
-      this.$emit("filterLocation", this.locations);
-    },
     ...mapActions({
       getLocationFromAddress: "getLocationFromAddress",
-      getNearbyLocations: "getNearbyLocations"
+      getNearbyLocations: "getNearbyLocations",
+      getUserLocation: "getUserLocation"
     }),
     ...mapMutations({
       setUserLocation: "setUserLocation",
@@ -145,10 +140,8 @@ export default {
       locations: "locations",
       map: "map",
       userLocation: "userLocation",
+      userAddress: "userAddress"
     }),
-    userAddress(){
-      return this.userLocation.address;
-    },
     unitsAbr() {
       if(settings.units == "miles"){
         return "mi."
@@ -163,19 +156,27 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style lang="scss">
 #location-filters {
-  width: 90%;
-  margin: 0 auto 3px;
+  width: auto;
+  margin: 0 auto;
+  padding: 0 5% 2%;
 }
 #location-filter-bar {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
   margin: 5px auto 0;
+  .icon {
+    cursor: pointer;
+  }
+  .locate-user {
+    margin-right: 7px;
+  }
 }
 #location-search-input {
-  width: 100%;
+  width: 98%;
+  height: 25px;
   margin: 0 auto;
-  padding: 0 2%;
+  padding: 0 0 0 2%;
   border-right: none;
   border-left: none;
   border-top: none;

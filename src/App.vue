@@ -40,6 +40,8 @@ export default {
 </script>
 
 <style>
+@import "https://static.ridestyler.net/rs-ui/latest/rsui-icons.min.css";
+
 h3 {
   margin: 40px 0 0;
 }
@@ -52,7 +54,10 @@ li {
   margin: 0 10px;
 }
 a {
-  color: #42b983;
+  color: #ec432c;
+}
+.icon {
+  color: #ec432c;
 }
 .loader::after {
   content: url('https://static.ridestyler.net/images/loaders/loader_radial_chaser_back_on_white_32.gif');

@@ -81,8 +81,9 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style lang="scss">
 #side-bar-wrapper {
-  margin: 0 auto 0 40px;
+  margin: 0 auto 0 15px;
   border: 1px solid lightgray;
+  border-radius: 5px;
   padding: 7px 0 0;
   width: 400px;
   overflow: hidden;
@@ -90,13 +91,16 @@ export default {
 #location-list {
   position: relative;
   overflow: auto;
-  height: 442px;
+  height: 431px;
   width: 418px;
   margin: 0;
   border-top: 1px solid lightgray;
 
-  :last-child {
-    border-bottom: none;
+  li {
+    margin-right: 17px;
+    &:last-child {
+      border-bottom: none;
+    }
   }
 }
 #no-results {
